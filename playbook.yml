@@ -60,9 +60,9 @@
       fireeye_s3_prefix: "/win"
   - role: ise-ansible-nessus-agent
     vars:
-      nessus_server_url: "nm02.sec.helix.gsa.gov"
-      nessus_agent_key: "c20bbd762cef265c58f166269f18b5dbcb7a67671c6744eeb2f7e97131ca04f1"
-      nessus_agent_artifacts_s3_bucket: gsa-sectools-artifacts-sandbox
+      nessus_server_url: ""
+      nessus_agent_key: ""
+      nessus_agent_artifacts_s3_bucket: 
       nessus_agent_artifacts_s3_key: /win/NessusAgent-8.0.0-x64.msi
   - role: odp-ansible-endgame
     vars:
