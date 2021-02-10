@@ -1,5 +1,5 @@
 <powershell>
 $admin = [adsi]("WinNT://./{{admin_user}}, user")
 $admin.PSBase.Invoke("SetPassword", "{{ admin_password }}")
-Invoke-Expression ((New-Object System.Net.Webclient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1'))
+Invoke-Expression ((New-Object System.Net.Webclient).DownloadString('https://raw.githubusercontent.com/GSA/odp-ansible-windows2019/main/files/ConfigRemoteWinRMForAnsible.ps1'))
 </powershell>
