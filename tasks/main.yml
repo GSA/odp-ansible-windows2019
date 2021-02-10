@@ -1,66 +1,52 @@
-- hosts: localhost
-  vars:
-    vm_name: "ISE-WINDOWS-2019-CIS-HARDENED"
-    vm_subnet: "subnet-e26556a4"
-    vm_type: "t2.medium"
-    vm_role: "instance_profile_for_cis_test"
-    vm_sg_id: "sg-03f10038db28367ae"
-    admin_user: administrator
-    admin_password: "KPQy9sY37@YaCH!C"
-  gather_facts: no
-  tasks:
-  - name: Gather facts about an AMI using ami-id
-    ec2_ami_facts:
-      filters:
-        name: "Windows_Server-2019-English-Full-Base-*"
-        owner-id: "801119661308"
-    register: amis
-  - debug:
-      var: amis.images.0.image_id
-  - name: Launch an instance
-    ec2_instance:
-      name: "{{ vm_name }}"
-      vpc_subnet_id: "{{ vm_subnet }}"
-      instance_type: "{{ vm_type }}"
-      instance_role: "{{ vm_role }}"
-      security_group: "{{ vm_sg_id }}"
-      image_id: "{{ amis.images.0.image_id }}"
-      user_data: "{{ lookup('template', 'templates/userdata.txt.j2') }}"
-      volumes:
-      - device_name: /dev/sda1
-        ebs:
-          volume_size: 50
-          delete_on_termination: true
-      wait: yes
-      wait_timeout: 600
-      tags:
-          Name: "{{ vm_name }}"
-          instance-parker: workdays
-    register: ec2
+- name: Gather facts about an AMI using ami-id
+  ec2_ami_facts:
+    filters:
+      name: "Windows_Server-2019-English-Full-Base-*"
+      owner-id: "801119661308"
+  register: amis
 
-  - debug:
-      var: ec2.instances
+- debug:
+    var: amis.images.0.image_id
 
-  - name: Wait for Windows server to respond to WinRM pings
-    wait_for:
-      port: 5986
-      host: "{{ ec2.instances.0.private_ip_address }}"
-      delay: 10
-      timeout: 360
-      state: started
+- name: Launch an instance
+  ec2_instance:
+    name: "{{ vm_name }}"
+    vpc_subnet_id: "{{ vm_subnet }}"
+    instance_type: "{{ vm_type }}"
+    instance_role: "{{ vm_role }}"
+    security_group: "{{ vm_sg_id }}"
+    image_id: "{{ amis.images.0.image_id }}"
+    user_data: "{{ lookup('template', 'templates/userdata.txt.j2') }}"
+    volumes:
+    - device_name: /dev/sda1
+      ebs:
+        volume_size: 50
+        delete_on_termination: true
+    wait: yes
+    wait_timeout: 600
+    tags:
+      Name: "{{ vm_name }}"
+      instance-parker: workdays
+  register: ec2
 
-  - name: Add windows hosts to inventory
-    add_host:
-      name: "win-{{ ec2.instances.0.id }}"
-      ansible_ssh_host: "{{ ec2.instances.0.private_ip_address }}"
-      groups: dynamic_hosts
-      ansible_connection: winrm
-      ansible_ssh_port: 5986
-      ansible_ssh_user: "{{ admin_user }}"
-      ansible_ssh_pass: "{{ admin_password }}"
-      ansible_winrm_server_cert_validation: ignore
-- hosts: dynamic_hosts
-  remote_user: ami_admin
-  tasks:
-  - name: Check connectivity
-    win_ping:
+- debug:
+    var: ec2.instances
+
+- name: Wait for Windows server to respond to WinRM pings
+  wait_for:
+    port: 5986
+    host: "{{ ec2.instances.0.private_ip_address }}"
+    delay: 10
+    timeout: 360
+    state: started
+
+- name: Add windows hosts to inventory
+  add_host:
+    name: "win-{{ ec2.instances.0.id }}"
+    ansible_ssh_host: "{{ ec2.instances.0.private_ip_address }}"
+    groups: base_image
+    ansible_connection: winrm
+    ansible_ssh_port: 5986
+    ansible_ssh_user: "{{ admin_user }}"
+    ansible_ssh_pass: "{{ admin_password }}"
+    ansible_winrm_server_cert_validation: ignore
