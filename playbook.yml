@@ -1,3 +1,4 @@
+## Download all the necessary repos
 - hosts: localhost
   connection: local
   gather_facts: no
@@ -33,6 +34,7 @@
       recursive: yes
       force: yes
 
+## Create a Windows 2019 EC2 instance
 - hosts: localhost
   vars:
     vm_name: "ISE-WINDOWS-2019-CIS-HARDENED"
@@ -46,6 +48,7 @@
   roles:
   - role: odp-ansible-windows2019
 
+## Execute the roles to install the agents and harden the security configuration
 - hosts: base_image
   roles:
   - role: odp-ansible-common-utils
@@ -76,3 +79,33 @@
       log_server: logs.sec.helix.gsa.gov
       log_server_port: 4078
   - role: ansible-os-win-2019
+
+## Stop the instance, create AMI and terminate the instance
+- hosts: localhost
+  tasks:
+  - ec2_instance:
+      instance_ids:
+       - i-048e4b2b2167d7b8f
+      state: stopped
+      wait: yes
+    register: result
+  - debug:
+      var: result
+  - ec2_ami:
+      instance_id: i-048e4b2b2167d7b8f
+      region: us-east-1
+      state: present
+      wait: yes
+      name: ISE-WINDOWS-2019-CIS-HARDENED
+      tags:
+        Name: ISE-WINDOWS-2019-CIS-HARDENED
+    register: image
+    when: result.instances.0.state.name == 'stopped'
+  - debug:
+      var: image.state
+  - ec2_instance:
+      instance_ids:
+       - i-048e4b2b2167d7b8f
+      state: terminated
+      wait: yes
+    when: image.state == 'available'
