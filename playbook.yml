@@ -1,17 +1,78 @@
 - hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+  - git:
+      repo: https://github.com/GSA/odp-ansible-common-utils.git
+      dest: roles/odp-ansible-common-utils
+      recursive: yes
+      force: yes
+  - git:
+      repo: https://github.com/GSA/odp-ansible-fireeye.git
+      dest: roles/odp-ansible-fireeye
+      recursive: yes
+      force: yes
+  - git:
+      repo: https://github.com/GSA/ise-ansible-nessus-agent.git
+      dest: roles/ise-ansible-nessus-agent
+      recursive: yes
+      force: yes
+  - git:
+      repo: https://github.com/GSA/odp-ansible-endgame.git
+      dest: roles/odp-ansible-endgame
+      recursive: yes
+      force: yes
+  - git:
+      repo: https://github.com/GSA/ansible-os-win-2019.git
+      dest: roles/ansible-os-win-2019
+      recursive: yes
+      force: yes
+  - git:
+      repo: https://github.com/GSA/odp-ansible-winlogbeat.git
+      dest: roles/odp-ansible-winlogbeat
+      recursive: yes
+      force: yes
+
+- hosts: localhost
   vars:
     vm_name: "ISE-WINDOWS-2019-CIS-HARDENED"
     vm_subnet: "subnet-e26556a4"
     vm_type: "t2.medium"
     vm_role: "instance_profile_for_cis_test"
     vm_sg_id: "sg-03f10038db28367ae"
-    admin_user: administrator
+    admin_user: ami_admin
     admin_password: "KPQy9sY37@YaCH!C"
   gather_facts: no
   roles:
   - role: odp-ansible-windows2019
 
 - hosts: base_image
-  tasks:
-  - name: Check connectivity
-    win_ping:
+  roles:
+  - role: odp-ansible-common-utils
+  - role: odp-ansible-fireeye
+    vars:
+      fireeye_cacert:
+      fireeye_provocert:
+      fireeye_provokey:
+      fireeye_servers: [  ]
+      fireeye_package: "IMAGE_HX_AGENT_WIN_32.30.0.zip"
+      fireeye_s3_bucket: ""
+      fireeye_s3_prefix: "/win"
+  - role: ise-ansible-nessus-agent
+    vars:
+      nessus_server_url: "nm02.sec.helix.gsa.gov"
+      nessus_agent_key: "c20bbd762cef265c58f166269f18b5dbcb7a67671c6744eeb2f7e97131ca04f1"
+      nessus_agent_artifacts_s3_bucket: gsa-sectools-artifacts-sandbox
+      nessus_agent_artifacts_s3_key: /win/NessusAgent-8.0.0-x64.msi
+  - role: odp-ansible-endgame
+    vars:
+      endgame_apikey: ""
+      endgame_installer: "SensorWindowsInstaller-Detect-Policy.exe"
+      endgame_config: "SensorWindowsInstaller-Detect-Policy.cfg"
+      endgame_s3_bucket: ""
+      endgame_s3_prefix: "/win/endgame"
+  - role: odp-ansible-winlogbeat
+    vars:
+      log_server: logs.sec.helix.gsa.gov
+      log_server_port: 4078
+  - role: ansible-os-win-2019
