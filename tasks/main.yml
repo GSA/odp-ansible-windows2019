@@ -37,12 +37,12 @@
     port: 5986
     host: "{{ ec2.instances.0.private_ip_address }}"
     delay: 10
-    timeout: 360
+    timeout: 60
     state: started
 
 - name: Add windows hosts to inventory
   add_host:
-    name: "win-{{ ec2.instances.0.id }}"
+    name: "{{ vm_name  }}"
     ansible_ssh_host: "{{ ec2.instances.0.private_ip_address }}"
     groups: base_image
     ansible_connection: winrm
@@ -50,3 +50,4 @@
     ansible_ssh_user: "{{ admin_user }}"
     ansible_ssh_pass: "{{ admin_password }}"
     ansible_winrm_server_cert_validation: ignore
+
