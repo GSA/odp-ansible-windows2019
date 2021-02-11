@@ -85,14 +85,14 @@
   tasks:
   - ec2_instance:
       instance_ids:
-       - i-048e4b2b2167d7b8f
+      - "{{ec2.instances.0.instance_id}}"
       state: stopped
       wait: yes
     register: result
   - debug:
       var: result
   - ec2_ami:
-      instance_id: i-048e4b2b2167d7b8f
+      instance_id: "{{ec2.instances.0.instance_id}}"
       region: us-east-1
       state: present
       wait: yes
@@ -105,7 +105,7 @@
       var: image.state
   - ec2_instance:
       instance_ids:
-       - i-048e4b2b2167d7b8f
+      - "{{ec2.instances.0.instance_id}}"
       state: terminated
       wait: yes
     when: image.state == 'available'
